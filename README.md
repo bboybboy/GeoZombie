@@ -1,11 +1,7 @@
 # GoeZombie
 
-----
-
-
 little funny project that can help you to setup safe area to avoid danger areas
 
-----
 ## How to build
 
 - run `gradle clean build`
@@ -23,7 +19,7 @@ little funny project that can help you to setup safe area to avoid danger areas
 
 
 
-#lolcat
+### lolcat
 [magic link](https://github.com/busyloop/lolcat)
 
 also don't forget to install lolcat, it can help you enjoy build process
