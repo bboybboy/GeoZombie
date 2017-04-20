@@ -1,12 +1,10 @@
 package geozombie.bboybboy.com.geozombie.controller;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -15,19 +13,13 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import geozombie.bboybboy.com.geozombie.R;
-import geozombie.bboybboy.com.geozombie.eventbus.Events;
 import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
-import geozombie.bboybboy.com.geozombie.utils.Utils;
 
 public class WifiController {
 
@@ -38,7 +30,6 @@ public class WifiController {
     private Context context;
     private WifiBroadcastReceiver wifiBroadcastReceiver;
     private WifiManager wifiManager;
-    private EventBus bus = EventBus.getDefault();
     private Handler scanningHandler = new Handler();
     private Handler progressDialogHandler = new Handler();
     private boolean isFindWifi;
@@ -64,15 +55,15 @@ public class WifiController {
             isNeedShowWifiDialog = true;
         }
     }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEvent(Events.WifiPermissionGranted event) {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        wifiBroadcastReceiver = new WifiBroadcastReceiver();
-        context.registerReceiver(wifiBroadcastReceiver, filter);
-        startScanningTask();
-    }
+//
+//    @Subscribe(threadMode = ThreadMode.MAIN)
+//    public void onEvent(Events.WifiPermissionGranted event) {
+//        IntentFilter filter = new IntentFilter();
+//        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+//        wifiBroadcastReceiver = new WifiBroadcastReceiver();
+//        context.registerReceiver(wifiBroadcastReceiver, filter);
+//        startScanningTask();
+//    }
 
     private void onWifiFindAction(boolean isFindWifiNow) {
         if (isNeedShowWifiDialog)
@@ -91,16 +82,12 @@ public class WifiController {
         wifiSSID = SharedPrefsUtils.getWifiSSID(context);
         Log.d(TAG, "init: ");
 
-        wifiManager =
-                (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        bus.register(this);
-        Utils.checkWifiPermission((Activity) context);
+        wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
     }
 
     public void release() {
         Log.d(TAG, "release: ");
         stopScanningTask();
-        bus.unregister(this);
         if (wifiBroadcastReceiver != null) {
             context.unregisterReceiver(wifiBroadcastReceiver);
             wifiBroadcastReceiver = null;
@@ -152,7 +139,6 @@ public class WifiController {
             if (wifiManager!= null) {
                 Log.d(TAG, "onReceive: wifiManager.getScanResults() "+wifiManager.getScanResults().toString());
                 wifiAvailableList = wifiManager.getScanResults();
-                Log.d(TAG, "_____________________________________");
                 Log.d(TAG, "onReceive: scanList.size = " + wifiAvailableList.size());
                 if (wifiSSID != null) {
                     for (ScanResult result : wifiAvailableList) {

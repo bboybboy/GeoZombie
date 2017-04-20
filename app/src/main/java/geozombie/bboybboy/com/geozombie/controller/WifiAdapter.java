@@ -3,6 +3,7 @@ package geozombie.bboybboy.com.geozombie.controller;
 import android.content.Context;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,16 +15,17 @@ import java.util.List;
 
 import geozombie.bboybboy.com.geozombie.R;
 
-public class WifiAdapter extends ArrayAdapter<ScanResult> {
-    Context context;
+class WifiAdapter extends ArrayAdapter<ScanResult> {
+    private Context context;
 
-    public WifiAdapter(Context context, int resource, List<ScanResult> objects) {
+    WifiAdapter(Context context, int resource, List<ScanResult> objects) {
         super(context, resource, objects);
         this.context = context;
     }
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.wifi_item, parent, false);
         }
@@ -34,9 +36,7 @@ public class WifiAdapter extends ArrayAdapter<ScanResult> {
     }
 
     private int getNormalizedLevel(ScanResult r) {
-        int level = WifiManager.calculateSignalLevel(r.level,
-                5);
-        return level;
+        return WifiManager.calculateSignalLevel(r.level, 5);
     }
 
     private String formatSSDI(ScanResult r) {

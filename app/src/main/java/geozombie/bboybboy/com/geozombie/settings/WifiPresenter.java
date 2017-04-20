@@ -11,12 +11,11 @@ import geozombie.bboybboy.com.geozombie.R;
 import geozombie.bboybboy.com.geozombie.controller.WifiController;
 import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
 
-public class WifiPresenter {
+class WifiPresenter {
     private EditText wifiSSIDEditText;
-    private FrameLayout chooserWifiButton;
-    WifiController wifiController;
+    private WifiController wifiController;
 
-    public WifiPresenter(SettingsActivity activity) {
+    WifiPresenter(SettingsActivity activity) {
         initWifi(activity);
         initUI(activity);
     }
@@ -41,7 +40,7 @@ public class WifiPresenter {
         String savedWifiSSID = SharedPrefsUtils.getWifiSSID(activity);
         if (savedWifiSSID != null)
             wifiSSIDEditText.setText(savedWifiSSID);
-        chooserWifiButton = (FrameLayout) activity.findViewById(R.id.choose_wifi);
+        FrameLayout chooserWifiButton = (FrameLayout) activity.findViewById(R.id.choose_wifi);
         wifiSSIDEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -64,7 +63,7 @@ public class WifiPresenter {
         });
     }
 
-    public void release() {
+    void release() {
         wifiController.release();
         wifiController = null;
     }

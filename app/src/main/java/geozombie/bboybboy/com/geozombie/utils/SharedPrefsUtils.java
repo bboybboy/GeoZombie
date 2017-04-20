@@ -13,8 +13,8 @@ public class SharedPrefsUtils {
     private static final String LATITUDE_KEY = "latitude";
     private static final String LONGITUDE_KEY = "longitude";
 
-    public static final long NO_RADIUS = 100;
-    public static final long NO_COORD = 0;
+    private static final long NO_RADIUS = 100;
+    private static final long NO_COORD = 0;
 
     private SharedPrefsUtils() {
     }

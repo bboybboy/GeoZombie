@@ -21,6 +21,7 @@ import geozombie.bboybboy.com.geozombie.settings.SettingsActivity;
 import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
 
 public class MainActivity extends PermissionActivity {
+
     private WifiController wifiController;
 
     private TextView statusText;

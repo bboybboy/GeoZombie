@@ -17,4 +17,6 @@
     <string name="go_to_settings">Go to settings</string>
     <string name="alert_title">Alert</string>
     <string name="alert_message">You need to grand location permission to use App</string>
+
+    <string name="permission_dialog_text">We need this permission to help you fight with zombies</string>
 </resources>

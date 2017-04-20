@@ -16,11 +16,10 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 
-import org.greenrobot.eventbus.EventBus;
 
+import geozombie.bboybboy.com.geozombie.MapReadyListener;
 import geozombie.bboybboy.com.geozombie.R;
 import geozombie.bboybboy.com.geozombie.settings.SettingsActivity;
-import geozombie.bboybboy.com.geozombie.eventbus.Events;
 import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
 
 public class MapController implements OnMapReadyCallback {
@@ -38,6 +37,8 @@ public class MapController implements OnMapReadyCallback {
     private GoogleMap map;
     private SupportMapFragment mapFragment;
     private EditText radiusEditText;
+
+    private MapReadyListener listener;
 
     public MapController(SettingsActivity activity) {
         context = activity;
@@ -71,6 +72,10 @@ public class MapController implements OnMapReadyCallback {
                 drawZone();
             }
         });
+    }
+
+    public void setMapReadyListener(MapReadyListener listener) {
+        this.listener = listener;
     }
 
     private void restoreState(Context context) {
@@ -124,6 +129,10 @@ public class MapController implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
+
+        if (listener != null) {
+            listener.onMapReady();
+        }
         map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
@@ -134,7 +143,5 @@ public class MapController implements OnMapReadyCallback {
         });
         if (centerControlledZone != null)
             initBy(centerControlledZone, false);
-
-        EventBus.getDefault().post(new Events.LocationPermissionCheck());
     }
 }
