@@ -3,11 +3,13 @@ package geozombie.bboybboy.com.geozombie.controller;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import org.greenrobot.eventbus.EventBus;
@@ -15,9 +17,13 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+import geozombie.bboybboy.com.geozombie.R;
 import geozombie.bboybboy.com.geozombie.eventbus.Events;
+import geozombie.bboybboy.com.geozombie.utils.CastomProgressDialog;
 import geozombie.bboybboy.com.geozombie.utils.Utils;
 
 public class WifiController {
@@ -32,13 +38,25 @@ public class WifiController {
     private Handler scanningHandler = new Handler();
     private boolean isFindWifi;
     private String wifiSSID;
-    private onWifiStatusChange onWifiStatusChange;
+    private onWifiActionListener onWifiActionListener;
     private List<ScanResult> wifiAvailableList;
+    private boolean isNeedShowWifiDialog;
 
-    public WifiController(Context context, onWifiStatusChange onWifiStatusChange) {
+    public WifiController(Context context, onWifiActionListener onWifiActionListener) {
         this.context = context;
-        this.onWifiStatusChange = onWifiStatusChange;
+        this.onWifiActionListener = onWifiActionListener;
         init();
+    }
+
+    public void showAvailableWifiDialog() {
+        if (wifiAvailableList != null && !wifiAvailableList.isEmpty()) {
+            CastomProgressDialog.dismiss();
+            showWifiListDialog(wifiAvailableList);
+            isNeedShowWifiDialog = false;
+        } else {
+            CastomProgressDialog.show(context, R.string.wifi_wait);
+            isNeedShowWifiDialog = true;
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -47,20 +65,22 @@ public class WifiController {
     }
 
     private void onWifiFindAction(boolean isFindWifiNow) {
+        if (isNeedShowWifiDialog)
+            showAvailableWifiDialog();
+
         if (isFindWifi != isFindWifiNow) {
             isFindWifi = isFindWifiNow;
-            if (onWifiStatusChange != null)
-                onWifiStatusChange.onStatusChange(isFindWifi);
+            if (onWifiActionListener != null)
+                onWifiActionListener.onStatusChange(isFindWifi);
         }
     }
 
     private void init() {
         isFindWifi = false;
-        wifiAvailableList=new ArrayList<>();
+        wifiAvailableList = new ArrayList<>();
 //        wifiSSID = SharedPrefsUtils.getWifiSSID(context);
         //TODO remove after test
         wifiSSID = "litslink 5";
-        if (wifiSSID != null) {
             Log.d(TAG, "init: ");
             IntentFilter filter = new IntentFilter();
             filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
@@ -70,7 +90,6 @@ public class WifiController {
             context.registerReceiver(wifiBroadcastReceiver, filter);
             bus.register(this);
             Utils.checkWifiPermission((Activity) context);
-        }
     }
 
     public void release() {
@@ -105,6 +124,9 @@ public class WifiController {
         @Override
         public void onReceive(Context context, Intent intent) {
             wifiAvailableList = wifiManager.getScanResults();
+            wifiAvailableList.addAll(wifiManager.getScanResults());
+            wifiAvailableList.addAll(wifiManager.getScanResults());
+            wifiAvailableList.addAll(wifiManager.getScanResults());
             Log.d(TAG, "_____________________________________");
             Log.d(TAG, "onReceive: scanList.size = " + wifiAvailableList.size());
             if (wifiSSID != null) {
@@ -122,7 +144,41 @@ public class WifiController {
         }
     }
 
-    public interface onWifiStatusChange {
+    private void showWifiListDialog(List<ScanResult> results) {
+        Collections.sort(results, new Comparator<ScanResult>() {
+            @Override
+            public int compare(ScanResult lhs, ScanResult rhs) {
+                return rhs.level > lhs.level ? 1 : rhs.level < lhs.level ? -1 : 0;
+            }
+        });
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(
+                context);
+        final WifiAdapter arrayAdapter = new WifiAdapter(
+                context,
+                android.R.layout.select_dialog_item, results);
+
+        builderSingle.setNegativeButton(context.getString(android.R.string.cancel),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        builderSingle.setAdapter(arrayAdapter,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (onWifiActionListener != null)
+                            onWifiActionListener.onWifiSelected(arrayAdapter.getItem(which).SSID);
+                    }
+                });
+        AlertDialog dialog = builderSingle.create();
+        dialog.show();
+    }
+
+    public interface onWifiActionListener {
         void onStatusChange(boolean isFindWifi);
+
+        void onWifiSelected(String wifiSSID);
     }
 }
