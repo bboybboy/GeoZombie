@@ -10,7 +10,7 @@ little funny project that can help you to setup safe area to avoid danger areas
 - enjoy
 
 ## requirements
-* gradle >= Gradle 2.14.1
+* gradle >= Gradle 3.3
 * android build tools - 25.0.2
 * sdk >= 25
 * support repository - 47
