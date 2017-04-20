@@ -1,6 +1,7 @@
 package geozombie.bboybboy.com.geozombie.controller;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,9 +9,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -23,24 +26,26 @@ import java.util.List;
 
 import geozombie.bboybboy.com.geozombie.R;
 import geozombie.bboybboy.com.geozombie.eventbus.Events;
-import geozombie.bboybboy.com.geozombie.utils.CastomProgressDialog;
 import geozombie.bboybboy.com.geozombie.utils.Utils;
 
 public class WifiController {
 
     private static String TAG = WifiController.class.getSimpleName();
     private final static int INTERVAL = 1000; //1 second
+    private final static int PROGRESS_INTERVAL = 10000; //10 second
 
     private Context context;
     private WifiBroadcastReceiver wifiBroadcastReceiver;
     private WifiManager wifiManager;
     private EventBus bus = EventBus.getDefault();
     private Handler scanningHandler = new Handler();
+    private Handler progressDialogHandler = new Handler();
     private boolean isFindWifi;
     private String wifiSSID;
     private onWifiActionListener onWifiActionListener;
     private List<ScanResult> wifiAvailableList;
     private boolean isNeedShowWifiDialog;
+    private  ProgressDialog progressDialog;
 
     public WifiController(Context context, onWifiActionListener onWifiActionListener) {
         this.context = context;
@@ -50,11 +55,11 @@ public class WifiController {
 
     public void showAvailableWifiDialog() {
         if (wifiAvailableList != null && !wifiAvailableList.isEmpty()) {
-            CastomProgressDialog.dismiss();
+            stopProgressTask();
             showWifiListDialog(wifiAvailableList);
             isNeedShowWifiDialog = false;
         } else {
-            CastomProgressDialog.show(context, R.string.wifi_wait);
+            startProgressTask();
             isNeedShowWifiDialog = true;
         }
     }
@@ -110,6 +115,15 @@ public class WifiController {
         }
     };
 
+    private Runnable dismissProgressTask = new Runnable() {
+        @Override
+        public void run() {
+            isNeedShowWifiDialog=false;
+            dismissProgress();
+            Toast.makeText(context,R.string.choose_wifi_dialog_alert,Toast.LENGTH_LONG).show();
+        }
+    };
+
     //Delayed task
     private void startScanningTask() {
         Log.d(TAG, "startScanningTask: ");
@@ -120,13 +134,22 @@ public class WifiController {
         scanningHandler.removeCallbacks(scanningTask);
     }
 
+    //Delayed task
+    private void startProgressTask() {
+        Log.d(TAG, "startProgressTask: ");
+        showProgress();
+        progressDialogHandler.postDelayed(dismissProgressTask, PROGRESS_INTERVAL);
+    }
+
+    private void stopProgressTask() {
+        progressDialogHandler.removeCallbacks(dismissProgressTask);
+        dismissProgress();
+    }
+
     private class WifiBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             wifiAvailableList = wifiManager.getScanResults();
-            wifiAvailableList.addAll(wifiManager.getScanResults());
-            wifiAvailableList.addAll(wifiManager.getScanResults());
-            wifiAvailableList.addAll(wifiManager.getScanResults());
             Log.d(TAG, "_____________________________________");
             Log.d(TAG, "onReceive: scanList.size = " + wifiAvailableList.size());
             if (wifiSSID != null) {
@@ -174,6 +197,39 @@ public class WifiController {
                 });
         AlertDialog dialog = builderSingle.create();
         dialog.show();
+    }
+
+    private void showProgress() {
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
+
+        int style;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            style = android.R.style.Theme_Material_Light_Dialog;
+        } else {
+            //noinspection deprecation
+            style = ProgressDialog.THEME_HOLO_LIGHT;
+        }
+
+        progressDialog = new ProgressDialog(context, style);
+        progressDialog.setMessage(context.getResources().getString(R.string.wifi_wait));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        },PROGRESS_INTERVAL);
+    }
+
+    private void dismissProgress() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+            progressDialog = null;
+        }
     }
 
     public interface onWifiActionListener {

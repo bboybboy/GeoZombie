@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
 
     <fragment
         android:id="@+id/map"
@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="5dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,12 +21,12 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/radius" />
+            android:text="@string/radius"/>
 
         <android.support.v4.widget.Space
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"/>
 
         <EditText
             android:id="@+id/radius_chooser"
@@ -34,8 +34,61 @@
             android:layout_height="wrap_content"
             android:digits="0123456789."
             android:gravity="center"
+            android:imeOptions="actionNext"
             android:inputType="numberDecimal"
-            android:text="@string/default_radius" />
+            android:text="@string/default_radius"/>
+
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/wifi_name"/>
+        <android.support.v4.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+
+        <FrameLayout
+            android:elevation="8dp"
+            android:id="@+id/choose_wifi"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_gravity="center">
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_search_black_24dp"
+                android:tint="@color/colorPrimary"/>
+
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginRight="4dp"
+                android:layout_marginBottom="4dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_wifi_black_24dp"
+                android:tint="@color/colorPrimary"/>
+        </FrameLayout>
+
+        <EditText
+            android:id="@+id/wifi_ssid"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:gravity="center"
+            android:inputType="textVisiblePassword"/>
+
+    </LinearLayout>
+
 
 </LinearLayout>

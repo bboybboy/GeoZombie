@@ -15,12 +15,14 @@ import android.support.v7.app.AppCompatActivity;
 import com.google.android.gms.maps.GoogleMap;
 
 import geozombie.bboybboy.com.geozombie.R;
+import geozombie.bboybboy.com.geozombie.controller.MapController;
 
 public class SettingsActivity extends AppCompatActivity implements LocationListener,
         CheckPermissionListener {
 
     private LocationManager locationManager;
     private MapController mapController;
+    private WifiPresenter wifiPresenter;
 
     boolean locationPermissionGranted = false;
 
@@ -29,6 +31,7 @@ public class SettingsActivity extends AppCompatActivity implements LocationListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         mapController = new MapController(this);
+        wifiPresenter=new WifiPresenter(this);
     }
 
     @Override
@@ -80,6 +83,12 @@ public class SettingsActivity extends AppCompatActivity implements LocationListe
             googleMap.setMyLocationEnabled(false);
             googleMap.getUiSettings().setMyLocationButtonEnabled(false);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        wifiPresenter.release();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package geozombie.bboybboy.com.geozombie.settings;
+package geozombie.bboybboy.com.geozombie.controller;
 
 import android.graphics.Color;
 import android.location.Location;
@@ -23,6 +23,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 
 import geozombie.bboybboy.com.geozombie.R;
+import geozombie.bboybboy.com.geozombie.settings.CheckPermissionListener;
+import geozombie.bboybboy.com.geozombie.settings.SettingsActivity;
 
 import static com.google.android.gms.location.places.Places.GEO_DATA_API;
 import static com.google.android.gms.location.places.Places.PLACE_DETECTION_API;
@@ -30,9 +32,9 @@ import static com.google.android.gms.location.places.Places.PLACE_DETECTION_API;
 public class MapController implements GoogleApiClient.OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks, OnMapReadyCallback {
 
-    static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
-    static final long MIN_TIME = 400;
-    static final float MIN_DISTANCE = 1000;
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    public static final long MIN_TIME = 400;
+    public static final float MIN_DISTANCE = 1000;
 
     private boolean isInit;
     private int groundColor;
@@ -47,7 +49,7 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
     private SupportMapFragment mapFragment;
     private EditText radiusEditText;
 
-    MapController(SettingsActivity activity) {
+    public MapController(SettingsActivity activity) {
         permissionListener = activity;
         initGoogleApiClient(activity);
         initUI(activity);
@@ -92,7 +94,7 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
         googleApiClient.connect();
     }
 
-    void initBy(Location location) {
+    public void initBy(Location location) {
         if (isInit) return;
 
         isInit = true;
@@ -104,7 +106,7 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
         drawZone();
     }
 
-    GoogleMap getMap() {
+    public GoogleMap getMap() {
         return map;
     }
 

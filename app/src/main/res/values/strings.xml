@@ -4,5 +4,7 @@
     <!--Settings screen-->
     <string name="radius">Radius(m)</string>
     <string name="default_radius">100</string>
+    <string name="wifi_name">Wifi SSID</string>
     <string name="wifi_wait">Scanning Wifi networks \nPlease wait ...</string>
+    <string name="choose_wifi_dialog_alert">Oops, something went wrong.\n Check your WIFI connection</string>
 </resources>

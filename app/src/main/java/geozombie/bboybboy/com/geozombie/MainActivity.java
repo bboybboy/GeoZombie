@@ -27,36 +27,6 @@ public class MainActivity extends PermissionActivity {
                 startSettingsActivity();
             }
         });
-
-        final ImageView wifiTest = (ImageView) findViewById(R.id.wifiTest);
-        wifiTest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (wifiController == null) {
-                    wifiTest.setColorFilter(Color.RED);
-                    wifiController = new WifiController(MainActivity.this, new WifiController.onWifiActionListener() {
-                        @Override
-                        public void onStatusChange(boolean isFindWifi) {
-                            if (isFindWifi) {
-                                wifiTest.setColorFilter(Color.GREEN);
-                            } else {
-                                wifiTest.setColorFilter(Color.RED);
-                            }
-                        }
-
-                        @Override
-                        public void onWifiSelected(String wifiSSID) {
-                            Toast.makeText(MainActivity.this, "Selected " + wifiSSID, Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    wifiController.showAvailableWifiDialog();
-                } else {
-                    wifiTest.setColorFilter(Color.GRAY);
-                    wifiController.release();
-                    wifiController = null;
-                }
-            }
-        });
     }
 
     private void startSettingsActivity() {
