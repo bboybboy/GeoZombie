@@ -33,4 +33,9 @@ public class MainActivity extends PermissionActivity {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
     }
+
+    @Override
+    protected void onLocationPermissionGranted() {
+        //nothing to do here
+    }
 }

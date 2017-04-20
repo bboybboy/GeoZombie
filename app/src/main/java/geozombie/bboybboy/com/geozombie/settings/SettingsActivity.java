@@ -7,24 +7,28 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationListener;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.LatLng;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+import geozombie.bboybboy.com.geozombie.PermissionActivity;
 import geozombie.bboybboy.com.geozombie.R;
 import geozombie.bboybboy.com.geozombie.controller.MapController;
+import geozombie.bboybboy.com.geozombie.eventbus.Events;
+import geozombie.bboybboy.com.geozombie.utils.Utils;
 
-public class SettingsActivity extends AppCompatActivity implements LocationListener,
-        CheckPermissionListener {
+public class SettingsActivity extends PermissionActivity implements LocationListener{
 
     private LocationManager locationManager;
     private MapController mapController;
     private WifiPresenter wifiPresenter;
 
-    boolean locationPermissionGranted = false;
+    private EventBus bus = EventBus.getDefault();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,44 +36,38 @@ public class SettingsActivity extends AppCompatActivity implements LocationListe
         setContentView(R.layout.activity_settings);
         mapController = new MapController(this);
         wifiPresenter=new WifiPresenter(this);
+        bus.register(this);
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[],
-                                           @NonNull int[] grantResults) {
-        locationPermissionGranted = false;
-        switch (requestCode) {
-            case MapController.MY_PERMISSIONS_REQUEST_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    locationPermissionGranted = true;
-                }
-            }
-        }
-        updateLocationUI();
+    protected void onDestroy() {
+        super.onDestroy();
+        mapController.release(this);
+        wifiPresenter.release();
+        mapController = null;
+        bus.unregister(this);
     }
 
-    private void updateLocationUI() {
+    @Override
+    protected void onLocationPermissionGranted() {
+        updateMap();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(Events.LocationPermissionCheck event) {
+        Utils.checkLocationPermission(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(Events.LocationPermissionGranted event) {
+        locationPermissionGranted = true;
+        updateMap();
+    }
+
+    @SuppressWarnings({"MissingPermission"})
+    private void updateMap() {
         if (mapController.getMap() == null) {
             return;
-        }
-
-    /*
-     * Request location permission, so that we can get the location of the
-     * device. The result of the permission request is handled by a callback,
-     * onRequestPermissionsResult.
-     */
-        locationPermissionGranted = false;
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            locationPermissionGranted = true;
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    MapController.MY_PERMISSIONS_REQUEST_LOCATION);
         }
 
         GoogleMap googleMap = mapController.getMap();
@@ -86,14 +84,8 @@ public class SettingsActivity extends AppCompatActivity implements LocationListe
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        wifiPresenter.release();
-    }
-
-    @Override
     public void onLocationChanged(Location location) {
-        mapController.initBy(location);
+        mapController.initBy(new LatLng(location.getLatitude(), location.getLongitude()), true);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -115,10 +107,5 @@ public class SettingsActivity extends AppCompatActivity implements LocationListe
     @Override
     public void onProviderDisabled(String s) {
 
-    }
-
-    @Override
-    public void onCheckPermission() {
-        updateLocationUI();
     }
 }

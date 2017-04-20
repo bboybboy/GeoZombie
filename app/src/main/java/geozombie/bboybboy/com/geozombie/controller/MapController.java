@@ -1,7 +1,7 @@
 package geozombie.bboybboy.com.geozombie.controller;
 
+import android.content.Context;
 import android.graphics.Color;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,9 +22,12 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 
+import org.greenrobot.eventbus.EventBus;
+
 import geozombie.bboybboy.com.geozombie.R;
-import geozombie.bboybboy.com.geozombie.settings.CheckPermissionListener;
 import geozombie.bboybboy.com.geozombie.settings.SettingsActivity;
+import geozombie.bboybboy.com.geozombie.eventbus.Events;
+import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
 
 import static com.google.android.gms.location.places.Places.GEO_DATA_API;
 import static com.google.android.gms.location.places.Places.PLACE_DETECTION_API;
@@ -32,7 +35,6 @@ import static com.google.android.gms.location.places.Places.PLACE_DETECTION_API;
 public class MapController implements GoogleApiClient.OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks, OnMapReadyCallback {
 
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     public static final long MIN_TIME = 400;
     public static final float MIN_DISTANCE = 1000;
 
@@ -41,7 +43,6 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
     private float radius = 100;
     private LatLng centerControlledZone;
 
-    private CheckPermissionListener permissionListener;
     private GoogleApiClient googleApiClient;
 
     private Circle mapCircle;
@@ -50,9 +51,9 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
     private EditText radiusEditText;
 
     public MapController(SettingsActivity activity) {
-        permissionListener = activity;
         initGoogleApiClient(activity);
         initUI(activity);
+        restoreState(activity);
     }
 
     private void initUI(FragmentActivity activity) {
@@ -82,6 +83,17 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
         });
     }
 
+    private void restoreState(Context context) {
+        centerControlledZone = SharedPrefsUtils.getLatLng(context);
+        radius = SharedPrefsUtils.getRadius(context);
+        radiusEditText.setText(String.valueOf(radius));
+    }
+
+    private void saveState(Context context) {
+        SharedPrefsUtils.setLatLng(context, centerControlledZone);
+        SharedPrefsUtils.setRadius(context, radius);
+    }
+
     private void initGoogleApiClient(FragmentActivity activity) {
         googleApiClient = new GoogleApiClient.Builder(activity)
                 .enableAutoManage(activity /* FragmentActivity */,
@@ -94,16 +106,26 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
         googleApiClient.connect();
     }
 
-    public void initBy(Location location) {
+    public void initBy(LatLng latLng, boolean withAnimation) {
         if (isInit) return;
 
         isInit = true;
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         centerControlledZone = latLng;
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 16);
-        map.animateCamera(cameraUpdate);
+        if (withAnimation)
+            map.animateCamera(cameraUpdate);
+        else
+            map.moveCamera(cameraUpdate);
 
         drawZone();
+    }
+
+    public void release(Context context) {
+        saveState(context);
+        googleApiClient.disconnect();
+        googleApiClient = null;
+
+        map = null;
     }
 
     public GoogleMap getMap() {
@@ -117,6 +139,7 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
     }
 
     private void drawZone() {
+        if (map == null) return;
         removeZone();
         mapCircle = map.addCircle(new CircleOptions()
                 .center(centerControlledZone)
@@ -139,7 +162,10 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
                 drawZone();
             }
         });
-        permissionListener.onCheckPermission();
+        if (centerControlledZone != null)
+            initBy(centerControlledZone, false);
+
+        EventBus.getDefault().post(new Events.LocationPermissionCheck());
     }
 
     @Override
