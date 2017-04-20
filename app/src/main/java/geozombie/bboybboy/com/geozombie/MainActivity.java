@@ -25,8 +25,8 @@ public class MainActivity extends PermissionActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
         updateUi();
         initWifi();
     }

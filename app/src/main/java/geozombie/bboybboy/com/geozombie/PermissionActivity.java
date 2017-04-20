@@ -1,8 +1,11 @@
 package geozombie.bboybboy.com.geozombie;
 
-import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
+import android.net.Uri;
+import android.provider.Settings;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
 import org.greenrobot.eventbus.EventBus;
@@ -23,8 +26,10 @@ public abstract class PermissionActivity extends AppCompatActivity {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     EventBus.getDefault().post(new Events.WifiPermissionGranted());
+                }else {
+                    onDeclinePermission();
                 }
-                return;
+                break;
             }
             case Utils.MY_PERMISSIONS_REQUEST_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
@@ -32,10 +37,32 @@ public abstract class PermissionActivity extends AppCompatActivity {
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     locationPermissionGranted = true;
                     onLocationPermissionGranted();
+                }else {
+                    onDeclinePermission();
                 }
-                return;
+                break;
             }
         }
+    }
+
+    private void onDeclinePermission() {
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(
+                this);
+        builderSingle.setCancelable(false);
+        builderSingle.setPositiveButton(R.string.go_to_settings, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                intent.setData(uri);
+                startActivity(intent);
+                finish();
+            }
+        });
+        builderSingle.setTitle(R.string.alert_title);
+        builderSingle.setMessage(R.string.alert_message);
+        builderSingle.show();
     }
 
     protected abstract void onLocationPermissionGranted();

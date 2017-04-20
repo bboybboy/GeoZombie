@@ -67,6 +67,10 @@ public class WifiController {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(Events.WifiPermissionGranted event) {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        wifiBroadcastReceiver = new WifiBroadcastReceiver();
+        context.registerReceiver(wifiBroadcastReceiver, filter);
         startScanningTask();
     }
 
@@ -86,12 +90,9 @@ public class WifiController {
         wifiAvailableList = new ArrayList<>();
         wifiSSID = SharedPrefsUtils.getWifiSSID(context);
         Log.d(TAG, "init: ");
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+
         wifiManager =
                 (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        wifiBroadcastReceiver = new WifiBroadcastReceiver();
-        context.registerReceiver(wifiBroadcastReceiver, filter);
         bus.register(this);
         Utils.checkWifiPermission((Activity) context);
     }
@@ -148,20 +149,23 @@ public class WifiController {
     private class WifiBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            wifiAvailableList = wifiManager.getScanResults();
-            Log.d(TAG, "_____________________________________");
-            Log.d(TAG, "onReceive: scanList.size = " + wifiAvailableList.size());
-            if (wifiSSID != null) {
-                for (ScanResult result : wifiAvailableList) {
-                    Log.d(TAG, "result: = " + result.SSID);
-                    if (wifiSSID.equals(result.SSID)) {
-                        onWifiFindAction(true);
-                        return;
-                    }
-                }
-                onWifiFindAction(false);
+            if (wifiManager!= null) {
+                Log.d(TAG, "onReceive: wifiManager.getScanResults() "+wifiManager.getScanResults().toString());
+                wifiAvailableList = wifiManager.getScanResults();
                 Log.d(TAG, "_____________________________________");
-                startScanningTask();
+                Log.d(TAG, "onReceive: scanList.size = " + wifiAvailableList.size());
+                if (wifiSSID != null) {
+                    for (ScanResult result : wifiAvailableList) {
+                        Log.d(TAG, "result: = " + result.SSID);
+                        if (wifiSSID.equals(result.SSID)) {
+                            onWifiFindAction(true);
+                            return;
+                        }
+                    }
+                    onWifiFindAction(false);
+                    Log.d(TAG, "_____________________________________");
+                    startScanningTask();
+                }
             }
         }
     }

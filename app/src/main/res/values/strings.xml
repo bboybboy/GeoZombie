@@ -14,4 +14,7 @@
     <string name="wifi_name">Wifi SSID</string>
     <string name="wifi_wait">Scanning Wifi networks \nPlease wait ...</string>
     <string name="choose_wifi_dialog_alert">Oops, something went wrong.\n Check your WIFI connection</string>
+    <string name="go_to_settings">Go to settings</string>
+    <string name="alert_title">Alert</string>
+    <string name="alert_message">You need to grand location permission to use App</string>
 </resources>
