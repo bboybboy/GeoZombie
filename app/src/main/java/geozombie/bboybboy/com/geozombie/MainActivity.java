@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -45,15 +46,17 @@ public class MainActivity extends PermissionActivity {
     protected void onStart() {
         super.onStart();
         updateUi();
-        initWifi();
         initGoogleApiClient();
         restoreLocation();
+        checkWifi();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        wifiController.release();
+        if (wifiController != null) {
+            wifiController.release();
+        }
         wifiController = null;
         releaseGoogleApiClient();
     }
@@ -82,13 +85,15 @@ public class MainActivity extends PermissionActivity {
         wifiController = new WifiController(this, new WifiController.onWifiActionListener() {
             @Override
             public void onStatusChange(boolean isFindWifi) {
-                updateStatusText(isFindWifi);
+                String connectedSSID = wifiController.getConnectedSSID();
+                String selectedSSID = SharedPrefsUtils.getWifiSSID(MainActivity.this);
+                updateStatusText(selectedSSID.equalsIgnoreCase(connectedSSID));
                 updateWifiStatus(isFindWifi);
             }
 
             @Override
             public void onWifiSelected(String wifiSSID) {
-
+                Log.d("wifi","ssid = " + wifiSSID);
             }
         });
     }
@@ -157,6 +162,12 @@ public class MainActivity extends PermissionActivity {
         }
     }
 
+    private void checkWifi() {
+        String connectedSSID = wifiController.getConnectedSSID();
+        String selectedSSID = SharedPrefsUtils.getWifiSSID(MainActivity.this);
+        updateStatusText(selectedSSID.equals(connectedSSID));
+    }
+
     private void initUI() {
         statusText = (TextView) findViewById(R.id.status_text);
         statusWifi = (TextView) findViewById(R.id.wifi_status);
@@ -178,7 +189,7 @@ public class MainActivity extends PermissionActivity {
 
     @Override
     protected void onLocationPermissionGranted() {
-        //nothing to do here
+        initWifi();
     }
 
     @Override

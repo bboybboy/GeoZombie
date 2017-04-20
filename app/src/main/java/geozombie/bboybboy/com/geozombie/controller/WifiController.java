@@ -5,7 +5,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
+import android.net.wifi.SupplicantState;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
@@ -55,15 +58,6 @@ public class WifiController {
             isNeedShowWifiDialog = true;
         }
     }
-//
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onEvent(Events.WifiPermissionGranted event) {
-//        IntentFilter filter = new IntentFilter();
-//        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-//        wifiBroadcastReceiver = new WifiBroadcastReceiver();
-//        context.registerReceiver(wifiBroadcastReceiver, filter);
-//        startScanningTask();
-//    }
 
     private void onWifiFindAction(boolean isFindWifiNow) {
         if (isNeedShowWifiDialog)
@@ -83,6 +77,11 @@ public class WifiController {
         Log.d(TAG, "init: ");
 
         wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        wifiBroadcastReceiver = new WifiBroadcastReceiver();
+        context.registerReceiver(wifiBroadcastReceiver, filter);
+        startScanningTask();
     }
 
     public void release() {
@@ -111,6 +110,12 @@ public class WifiController {
         }
     };
 
+    public String getConnectedSSID() {
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        String SSID = wifiInfo.getSSID().substring(1, wifiInfo.getSSID().length() - 1);
+        return wifiInfo.getSupplicantState() == SupplicantState.COMPLETED ? SSID : "";
+    }
+
     //Delayed task
     private void startScanningTask() {
         Log.d(TAG, "startScanningTask: ");
@@ -136,8 +141,8 @@ public class WifiController {
     private class WifiBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (wifiManager!= null) {
-                Log.d(TAG, "onReceive: wifiManager.getScanResults() "+wifiManager.getScanResults().toString());
+            if (wifiManager != null) {
+                Log.d(TAG, "onReceive: wifiManager.getScanResults() " + wifiManager.getScanResults().toString());
                 wifiAvailableList = wifiManager.getScanResults();
                 Log.d(TAG, "onReceive: scanList.size = " + wifiAvailableList.size());
                 if (wifiSSID != null) {
