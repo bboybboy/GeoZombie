@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">GeoZombie</string>
 
+    <!--Main screen-->
+    <string name="in">In</string>
+    <string name="out">Out</string>
+    <string name="wifi_point">Wifi point SSID</string>
+    <string name="distance">Distance (m)</string>
+    <string name="wifi_not_selected">Not selected</string>
+
     <!--Settings screen-->
     <string name="radius">Radius(m)</string>
     <string name="default_radius">100</string>

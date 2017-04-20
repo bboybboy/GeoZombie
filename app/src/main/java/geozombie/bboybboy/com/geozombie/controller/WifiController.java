@@ -26,6 +26,7 @@ import java.util.List;
 
 import geozombie.bboybboy.com.geozombie.R;
 import geozombie.bboybboy.com.geozombie.eventbus.Events;
+import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
 import geozombie.bboybboy.com.geozombie.utils.Utils;
 
 public class WifiController {
@@ -45,7 +46,7 @@ public class WifiController {
     private onWifiActionListener onWifiActionListener;
     private List<ScanResult> wifiAvailableList;
     private boolean isNeedShowWifiDialog;
-    private  ProgressDialog progressDialog;
+    private ProgressDialog progressDialog;
 
     public WifiController(Context context, onWifiActionListener onWifiActionListener) {
         this.context = context;
@@ -83,18 +84,16 @@ public class WifiController {
     private void init() {
         isFindWifi = false;
         wifiAvailableList = new ArrayList<>();
-//        wifiSSID = SharedPrefsUtils.getWifiSSID(context);
-        //TODO remove after test
-        wifiSSID = "litslink 5";
-            Log.d(TAG, "init: ");
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-            wifiManager =
-                    (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            wifiBroadcastReceiver = new WifiBroadcastReceiver();
-            context.registerReceiver(wifiBroadcastReceiver, filter);
-            bus.register(this);
-            Utils.checkWifiPermission((Activity) context);
+        wifiSSID = SharedPrefsUtils.getWifiSSID(context);
+        Log.d(TAG, "init: ");
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        wifiManager =
+                (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiBroadcastReceiver = new WifiBroadcastReceiver();
+        context.registerReceiver(wifiBroadcastReceiver, filter);
+        bus.register(this);
+        Utils.checkWifiPermission((Activity) context);
     }
 
     public void release() {
@@ -118,9 +117,9 @@ public class WifiController {
     private Runnable dismissProgressTask = new Runnable() {
         @Override
         public void run() {
-            isNeedShowWifiDialog=false;
+            isNeedShowWifiDialog = false;
             dismissProgress();
-            Toast.makeText(context,R.string.choose_wifi_dialog_alert,Toast.LENGTH_LONG).show();
+            Toast.makeText(context, R.string.choose_wifi_dialog_alert, Toast.LENGTH_LONG).show();
         }
     };
 
@@ -222,7 +221,7 @@ public class WifiController {
             public void run() {
 
             }
-        },PROGRESS_INTERVAL);
+        }, PROGRESS_INTERVAL);
     }
 
     private void dismissProgress() {
