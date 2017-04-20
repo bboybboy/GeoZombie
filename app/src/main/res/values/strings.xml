@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">GeoZombie</string>
+
+    <!--Settings screen-->
+    <string name="radius">Radius(m)</string>
+    <string name="default_radius">100</string>
 </resources>
