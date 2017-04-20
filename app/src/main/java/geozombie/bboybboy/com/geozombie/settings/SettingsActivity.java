@@ -7,8 +7,13 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -22,9 +27,8 @@ import geozombie.bboybboy.com.geozombie.controller.MapController;
 import geozombie.bboybboy.com.geozombie.eventbus.Events;
 import geozombie.bboybboy.com.geozombie.utils.Utils;
 
-public class SettingsActivity extends PermissionActivity implements LocationListener{
+public class SettingsActivity extends PermissionActivity{
 
-    private LocationManager locationManager;
     private MapController mapController;
     private WifiPresenter wifiPresenter;
 
@@ -34,15 +38,21 @@ public class SettingsActivity extends PermissionActivity implements LocationList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        initGoogleApiClient();
         mapController = new MapController(this);
         wifiPresenter=new WifiPresenter(this);
         bus.register(this);
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-        mapController.release(this);
+        mapController.release();
         wifiPresenter.release();
         mapController = null;
         bus.unregister(this);
@@ -74,9 +84,11 @@ public class SettingsActivity extends PermissionActivity implements LocationList
         if (locationPermissionGranted) {
             googleMap.setMyLocationEnabled(true);
             googleMap.getUiSettings().setMyLocationButtonEnabled(true);
-            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MapController.MIN_TIME,
-                    MapController.MIN_DISTANCE, this);
+            LocationRequest locationRequest = new LocationRequest()
+                    .setInterval(MapController.MIN_TIME)
+                    .setSmallestDisplacement(MapController.MIN_DISTANCE);
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    googleApiClient, locationRequest, this);
         } else {
             googleMap.setMyLocationEnabled(false);
             googleMap.getUiSettings().setMyLocationButtonEnabled(false);
@@ -91,21 +103,10 @@ public class SettingsActivity extends PermissionActivity implements LocationList
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        locationManager.removeUpdates(this);
     }
 
     @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-
+    public void onConnected(@Nullable Bundle bundle) {
+        mapController.initMap();
     }
 }

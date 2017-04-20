@@ -6,6 +6,13 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationServices;
+
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 
 import org.greenrobot.eventbus.EventBus;
@@ -13,10 +20,34 @@ import org.greenrobot.eventbus.EventBus;
 import geozombie.bboybboy.com.geozombie.eventbus.Events;
 import geozombie.bboybboy.com.geozombie.utils.Utils;
 
-public abstract class PermissionActivity extends AppCompatActivity {
+import static com.google.android.gms.location.places.Places.GEO_DATA_API;
+import static com.google.android.gms.location.places.Places.PLACE_DETECTION_API;
+
+public abstract class PermissionActivity extends AppCompatActivity implements LocationListener,
+        GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks{
 
     protected boolean locationPermissionGranted = false;
-    private boolean askedAboutLocationMannerly = false;
+    protected GoogleApiClient googleApiClient;
+
+    protected void initGoogleApiClient() {
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */,
+                        this /* OnConnectionFailedListener */)
+                .addConnectionCallbacks(this)
+                .addApi(LocationServices.API)
+                .addApi(GEO_DATA_API)
+                .addApi(PLACE_DETECTION_API)
+                .build();
+        googleApiClient.connect();
+    }
+
+    protected void releaseGoogleApiClient() {
+        if (googleApiClient.isConnected())
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+        googleApiClient.stopAutoManage(this);
+        googleApiClient.disconnect();
+        googleApiClient = null;
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -63,6 +94,14 @@ public abstract class PermissionActivity extends AppCompatActivity {
         builderSingle.setTitle(R.string.alert_title);
         builderSingle.setMessage(R.string.alert_message);
         builderSingle.show();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
     protected abstract void onLocationPermissionGranted();

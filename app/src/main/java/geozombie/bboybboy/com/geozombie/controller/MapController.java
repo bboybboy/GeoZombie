@@ -2,17 +2,11 @@ package geozombie.bboybboy.com.geozombie.controller;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -29,29 +23,24 @@ import geozombie.bboybboy.com.geozombie.settings.SettingsActivity;
 import geozombie.bboybboy.com.geozombie.eventbus.Events;
 import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
 
-import static com.google.android.gms.location.places.Places.GEO_DATA_API;
-import static com.google.android.gms.location.places.Places.PLACE_DETECTION_API;
+public class MapController implements OnMapReadyCallback {
 
-public class MapController implements GoogleApiClient.OnConnectionFailedListener,
-        GoogleApiClient.ConnectionCallbacks, OnMapReadyCallback {
-
-    public static final long MIN_TIME = 400;
-    public static final float MIN_DISTANCE = 1000;
+    public static final long MIN_TIME = 0;
+    public static final float MIN_DISTANCE = 0;
 
     private boolean isInit;
     private int groundColor;
     private float radius = 100;
     private LatLng centerControlledZone;
 
-    private GoogleApiClient googleApiClient;
-
+    private Context context;
     private Circle mapCircle;
     private GoogleMap map;
     private SupportMapFragment mapFragment;
     private EditText radiusEditText;
 
     public MapController(SettingsActivity activity) {
-        initGoogleApiClient(activity);
+        context = activity;
         initUI(activity);
         restoreState(activity);
     }
@@ -78,6 +67,7 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
                     return;
                 }
                 radius = Float.parseFloat(radiusEditText.getText().toString());
+                SharedPrefsUtils.setRadius(context, radius);
                 drawZone();
             }
         });
@@ -87,23 +77,6 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
         centerControlledZone = SharedPrefsUtils.getLatLng(context);
         radius = SharedPrefsUtils.getRadius(context);
         radiusEditText.setText(String.valueOf(radius));
-    }
-
-    private void saveState(Context context) {
-        SharedPrefsUtils.setLatLng(context, centerControlledZone);
-        SharedPrefsUtils.setRadius(context, radius);
-    }
-
-    private void initGoogleApiClient(FragmentActivity activity) {
-        googleApiClient = new GoogleApiClient.Builder(activity)
-                .enableAutoManage(activity /* FragmentActivity */,
-                        this /* OnConnectionFailedListener */)
-                .addConnectionCallbacks(this)
-                .addApi(LocationServices.API)
-                .addApi(GEO_DATA_API)
-                .addApi(PLACE_DETECTION_API)
-                .build();
-        googleApiClient.connect();
     }
 
     public void initBy(LatLng latLng, boolean withAnimation) {
@@ -120,11 +93,7 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
         drawZone();
     }
 
-    public void release(Context context) {
-        saveState(context);
-        googleApiClient.disconnect();
-        googleApiClient = null;
-
+    public void release() {
         map = null;
     }
 
@@ -148,7 +117,7 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
                 .fillColor(groundColor));
     }
 
-    private void initMap() {
+    public void initMap() {
         mapFragment.getMapAsync(this);
     }
 
@@ -160,26 +129,12 @@ public class MapController implements GoogleApiClient.OnConnectionFailedListener
             public void onMapClick(LatLng latLng) {
                 centerControlledZone = latLng;
                 drawZone();
+                SharedPrefsUtils.setLatLng(context, centerControlledZone);
             }
         });
         if (centerControlledZone != null)
             initBy(centerControlledZone, false);
 
         EventBus.getDefault().post(new Events.LocationPermissionCheck());
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        initMap();
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
     }
 }
