@@ -104,7 +104,7 @@ public class MainActivity extends PermissionActivity {
 
             @Override
             public void onWifiSelected(String wifiSSID) {
-                Log.d("wifi","ssid = " + wifiSSID);
+                Log.d("wifi", "ssid = " + wifiSSID);
             }
         });
     }
@@ -221,14 +221,22 @@ public class MainActivity extends PermissionActivity {
     }
 
     private void callZombies() {
-        isZombieVisible = true;
-        rootView.post(new Runnable() {
-            @Override
-            public void run() {
-                cancelPreviousZombies();
-                onStatusUnknown();
-            }
-        });
+        isZombieVisible = !isZombieVisible;
+        if (isZombieVisible) {
+            rootView.post(new Runnable() {
+                @Override
+                public void run() {
+                    cancelPreviousZombies();
+                    if ((distance < radius) || isZone) {
+                        onUserInCircle();
+                    } else {
+                        onUserOutOfCircle();
+                    }
+                }
+            });
+        } else {
+            cancelPreviousZombies();
+        }
     }
 
     private void startSettingsActivity() {
@@ -271,6 +279,6 @@ public class MainActivity extends PermissionActivity {
 
     private void cancelPreviousZombies() {
         if (currentZombiesContainer == null) return;
-            currentZombiesContainer.cancel();
+        currentZombiesContainer.cancel();
     }
 }
