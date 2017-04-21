@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
@@ -27,7 +29,6 @@ import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
 public class WifiController {
 
     private static String TAG = WifiController.class.getSimpleName();
-    private final static int INTERVAL = 1000; //1 second
     private final static int PROGRESS_INTERVAL = 10000; //10 second
 
     private Context context;
@@ -35,7 +36,6 @@ public class WifiController {
     private WifiManager wifiManager;
     private Handler scanningHandler = new Handler();
     private Handler progressDialogHandler = new Handler();
-    private boolean isFindWifi;
     private String wifiSSID;
     private onWifiActionListener onWifiActionListener;
     private List<ScanResult> wifiAvailableList;
@@ -55,23 +55,25 @@ public class WifiController {
             isNeedShowWifiDialog = false;
         } else {
             startProgressTask();
+            wifiManager.startScan();
             isNeedShowWifiDialog = true;
         }
     }
 
-    private void onWifiFindAction(boolean isFindWifiNow) {
-        if (isNeedShowWifiDialog)
-            showAvailableWifiDialog();
-
-        if (isFindWifi != isFindWifiNow) {
-            isFindWifi = isFindWifiNow;
-            if (onWifiActionListener != null)
-                onWifiActionListener.onStatusChange(isFindWifi);
+    private void onWifiListUpdated() {
+        if (isNeedShowWifiDialog) {
+            stopProgressTask();
+            showWifiListDialog(wifiAvailableList);
+            isNeedShowWifiDialog = false;
         }
     }
 
+    private void onWifiFindAction(boolean isFindWifiNow) {
+            if (onWifiActionListener != null)
+                onWifiActionListener.onStatusChange(isFindWifiNow);
+    }
+
     private void init() {
-        isFindWifi = false;
         wifiAvailableList = new ArrayList<>();
         wifiSSID = SharedPrefsUtils.getWifiSSID(context);
         Log.d(TAG, "init: ");
@@ -79,27 +81,19 @@ public class WifiController {
         wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         wifiBroadcastReceiver = new WifiBroadcastReceiver();
         context.registerReceiver(wifiBroadcastReceiver, filter);
-        startScanningTask();
     }
 
     public void release() {
         Log.d(TAG, "release: ");
-        stopScanningTask();
         if (wifiBroadcastReceiver != null) {
             context.unregisterReceiver(wifiBroadcastReceiver);
             wifiBroadcastReceiver = null;
         }
         wifiManager = null;
     }
-
-    private Runnable scanningTask = new Runnable() {
-        @Override
-        public void run() {
-            wifiManager.startScan();
-        }
-    };
 
     private Runnable dismissProgressTask = new Runnable() {
         @Override
@@ -125,16 +119,6 @@ public class WifiController {
     }
 
     //Delayed task
-    private void startScanningTask() {
-        Log.d(TAG, "startScanningTask: ");
-        scanningHandler.postDelayed(scanningTask, INTERVAL);
-    }
-
-    private void stopScanningTask() {
-        scanningHandler.removeCallbacks(scanningTask);
-    }
-
-    //Delayed task
     private void startProgressTask() {
         Log.d(TAG, "startProgressTask: ");
         showProgress();
@@ -149,21 +133,28 @@ public class WifiController {
     private class WifiBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (wifiManager != null) {
-                Log.d(TAG, "onReceive: wifiManager.getScanResults() " + wifiManager.getScanResults().toString());
-                wifiAvailableList = wifiManager.getScanResults();
-                Log.d(TAG, "onReceive: scanList.size = " + wifiAvailableList.size());
-                if (wifiSSID != null) {
-                    for (ScanResult result : wifiAvailableList) {
-                        Log.d(TAG, "result: = " + result.SSID);
-                        if (wifiSSID.equals(result.SSID)) {
+
+            if (intent != null && intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+                ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo wifi = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                boolean isConnected = wifi != null && wifi.isConnectedOrConnecting();
+                if (isConnected) {
+                    String wifiSSIDNew = wifiManager.getConnectionInfo().getSSID();
+                    if (wifiSSIDNew != null) {
+                        wifiSSIDNew = wifiSSIDNew.substring(1, wifiSSIDNew.length() - 1);
+                        Log.d(TAG, "onReceive: wifiSSID = " + wifiSSID);
+                        if (wifiSSID != null && wifiSSID.equals(wifiSSIDNew)) {
                             onWifiFindAction(true);
                             return;
                         }
                     }
-                    onWifiFindAction(false);
-                    Log.d(TAG, "_____________________________________");
-                    startScanningTask();
+                }
+                onWifiFindAction(false);
+            } else if (intent != null && intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                if (wifiManager != null) {
+                    Log.d(TAG, "onReceive: wifiManager.getScanResults() " + wifiManager.getScanResults().toString());
+                    wifiAvailableList = wifiManager.getScanResults();
+                    onWifiListUpdated();
                 }
             }
         }
@@ -218,13 +209,6 @@ public class WifiController {
         progressDialog.setMessage(context.getResources().getString(R.string.wifi_wait));
         progressDialog.setCancelable(false);
         progressDialog.show();
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        }, PROGRESS_INTERVAL);
     }
 
     private void dismissProgress() {

@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -61,7 +62,6 @@ public class MainActivity extends PermissionActivity {
         updateUi();
         initGoogleApiClient();
         restoreLocation();
-        checkWifi();
     }
 
     @Override
@@ -99,6 +99,7 @@ public class MainActivity extends PermissionActivity {
             @Override
             public void onStatusChange(boolean isFindWifi) {
                 checkWifi();
+                updateStatusText(isFindWifi);
                 updateWifiStatus(isFindWifi);
             }
 
@@ -181,22 +182,7 @@ public class MainActivity extends PermissionActivity {
 
     private void checkWifi() {
         if (!wifiController.checkWifiIsEnabled()) {
-            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-            dialog.setTitle(R.string.alert_title);
-            dialog.setMessage(R.string.enable_wifi_message);
-            dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-                }
-            });
-            dialog.show();
-            return;
-        }
-        String connectedSSID = wifiController.getConnectedSSID();
-        String selectedSSID = SharedPrefsUtils.getWifiSSID(MainActivity.this);
-        if (selectedSSID != null) {
-            updateStatusText(selectedSSID.equals(connectedSSID));
+            Toast.makeText(this, getString(R.string.enable_wifi_message), Toast.LENGTH_SHORT).show();
         }
     }
 
