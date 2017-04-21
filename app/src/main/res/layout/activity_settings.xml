@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
+              android:background="#111110"
               android:orientation="vertical">
 
     <fragment
@@ -21,6 +22,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
             android:text="@string/radius"/>
 
         <android.support.v4.widget.Space
@@ -34,6 +36,7 @@
             android:layout_height="wrap_content"
             android:digits="0123456789."
             android:gravity="center"
+            android:textColor="@android:color/white"
             android:imeOptions="actionNext"
             android:inputType="numberDecimal"
             android:text="@string/default_radius"/>
@@ -49,7 +52,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
             android:text="@string/wifi_name"/>
+
         <android.support.v4.widget.Space
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -86,6 +91,7 @@
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:gravity="center"
+            android:textColor="@android:color/white"
             android:inputType="textVisiblePassword"/>
 
     </LinearLayout>

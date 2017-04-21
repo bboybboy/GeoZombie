@@ -10,6 +10,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.google.android.gms.location.LocationRequest;
@@ -18,10 +19,19 @@ import com.google.android.gms.maps.model.LatLng;
 
 import geozombie.bboybboy.com.geozombie.controller.MapController;
 import geozombie.bboybboy.com.geozombie.controller.WifiController;
+import geozombie.bboybboy.com.geozombie.j4f.AZombiesContainer;
+import geozombie.bboybboy.com.geozombie.j4f.CircleZombiesContainer;
+import geozombie.bboybboy.com.geozombie.j4f.WalkingZombiesContainer;
 import geozombie.bboybboy.com.geozombie.settings.SettingsActivity;
 import geozombie.bboybboy.com.geozombie.utils.SharedPrefsUtils;
 
 public class MainActivity extends PermissionActivity {
+
+    private final static int NUMBER_OF_ZOMBIES = 25;
+    private ViewGroup rootView;
+    private AZombiesContainer currentZombiesContainer;
+    private boolean isZombieVisible;
+
 
     private WifiController wifiController;
 
@@ -39,6 +49,7 @@ public class MainActivity extends PermissionActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        rootView = (ViewGroup) findViewById(R.id.activity_main);
         initUI();
     }
 
@@ -85,9 +96,7 @@ public class MainActivity extends PermissionActivity {
         wifiController = new WifiController(this, new WifiController.onWifiActionListener() {
             @Override
             public void onStatusChange(boolean isFindWifi) {
-                String connectedSSID = wifiController.getConnectedSSID();
-                String selectedSSID = SharedPrefsUtils.getWifiSSID(MainActivity.this);
-                updateStatusText(selectedSSID.equalsIgnoreCase(connectedSSID));
+                checkWifi();
                 updateWifiStatus(isFindWifi);
             }
 
@@ -154,9 +163,15 @@ public class MainActivity extends PermissionActivity {
 
     private void checkConditions() {
         if ((distance < radius) || isZone) {
+            if (isZombieVisible) {
+                onUserInCircle();
+            }
             statusText.setText(R.string.in);
             statusText.setTextColor(ContextCompat.getColor(this, R.color.green));
         } else {
+            if (isZombieVisible) {
+                onUserOutOfCircle();
+            }
             statusText.setText(R.string.out);
             statusText.setTextColor(Color.RED);
         }
@@ -178,8 +193,24 @@ public class MainActivity extends PermissionActivity {
                 startSettingsActivity();
             }
         });
+        findViewById(R.id.zombies).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callZombies();
+            }
+        });
 
         distanceStatus = (TextView) findViewById(R.id.distance_status);
+    }
+
+    private void callZombies() {
+        isZombieVisible = true;
+        rootView.post(new Runnable() {
+            @Override
+            public void run() {
+                onStatusUnknown();
+            }
+        });
     }
 
     private void startSettingsActivity() {
@@ -195,5 +226,34 @@ public class MainActivity extends PermissionActivity {
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         initLocation();
+    }
+
+
+    private void onUserInCircle() {
+        updateZombiesContainer(new CircleZombiesContainer(rootView, 2 * NUMBER_OF_ZOMBIES, R.mipmap.inside));
+    }
+
+    private void onUserConnectedToProperWifi() {
+        updateZombiesContainer(new CircleZombiesContainer(rootView, 2 * NUMBER_OF_ZOMBIES, R.mipmap.wifi));
+    }
+
+    private void onUserOutOfCircle() {
+        updateZombiesContainer(new CircleZombiesContainer(rootView, 2 * NUMBER_OF_ZOMBIES, R.mipmap.outside));
+    }
+
+    private void onStatusUnknown() {
+        updateZombiesContainer(new WalkingZombiesContainer(rootView, NUMBER_OF_ZOMBIES));
+    }
+
+    private void updateZombiesContainer(AZombiesContainer newZombiesContainer) {
+        cancelPreviousZombies();
+        currentZombiesContainer = newZombiesContainer;
+        currentZombiesContainer.populateZombies();
+    }
+
+    private void cancelPreviousZombies() {
+        if (currentZombiesContainer == null) return;
+            Log.d("OLOLOLO", "COunt = " + currentZombiesContainer.zombieViews.size());
+            currentZombiesContainer.cancel();
     }
 }
