@@ -1,6 +1,8 @@
 package geozombie.bboybboy.com.geozombie.settings;
 
 import android.app.Activity;
+import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -58,7 +60,21 @@ class WifiPresenter {
         chooserWifiButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                wifiController.showAvailableWifiDialog();
+                if (wifiController.checkWifiIsEnabled()) {
+                    wifiController.showAvailableWifiDialog();
+                } else {
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(activity);
+                    dialog.setTitle(R.string.alert_title);
+                    dialog.setMessage(R.string.enable_wifi_message);
+                    dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                    dialog.show();
+                }
+
             }
         });
     }

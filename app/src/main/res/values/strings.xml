@@ -20,4 +20,6 @@
 
     <string name="permission_dialog_text">We need this permission to help you fight with zombies</string>
     <string name="call_zombies">Call zombies</string>
+    <string name="enable_wifi_message">Please turn on your wifi</string>
+    <string name="ok">OK</string>
 </resources>

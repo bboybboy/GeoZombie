@@ -66,5 +66,6 @@ public final class CircleZombiesContainer extends AZombiesContainer {
         imageView.setY(circleCenterY - radius / 4);
         imageView.setImageDrawable(drawable);
         rootView.addView(imageView);
+        zombieViews.add(imageView);
     }
 }

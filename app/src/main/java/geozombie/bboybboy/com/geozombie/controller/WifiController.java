@@ -111,9 +111,17 @@ public class WifiController {
     };
 
     public String getConnectedSSID() {
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        String SSID = wifiInfo.getSSID().substring(1, wifiInfo.getSSID().length() - 1);
-        return wifiInfo.getSupplicantState() == SupplicantState.COMPLETED ? SSID : "";
+        if (checkWifiIsEnabled()) {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            String SSID = wifiInfo.getSSID().substring(1, wifiInfo.getSSID().length() - 1);
+            return wifiInfo.getSupplicantState() == SupplicantState.COMPLETED ? SSID : "";
+        } else {
+            return "";
+        }
+    }
+
+    public boolean checkWifiIsEnabled() {
+        return wifiManager.isWifiEnabled();
     }
 
     //Delayed task

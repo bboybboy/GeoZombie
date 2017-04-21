@@ -1,5 +1,6 @@
 package geozombie.bboybboy.com.geozombie;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -178,9 +180,24 @@ public class MainActivity extends PermissionActivity {
     }
 
     private void checkWifi() {
+        if (!wifiController.checkWifiIsEnabled()) {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            dialog.setTitle(R.string.alert_title);
+            dialog.setMessage(R.string.enable_wifi_message);
+            dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
+            dialog.show();
+            return;
+        }
         String connectedSSID = wifiController.getConnectedSSID();
         String selectedSSID = SharedPrefsUtils.getWifiSSID(MainActivity.this);
-        updateStatusText(selectedSSID.equals(connectedSSID));
+        if (selectedSSID != null) {
+            updateStatusText(selectedSSID.equals(connectedSSID));
+        }
     }
 
     private void initUI() {
@@ -208,6 +225,7 @@ public class MainActivity extends PermissionActivity {
         rootView.post(new Runnable() {
             @Override
             public void run() {
+                cancelPreviousZombies();
                 onStatusUnknown();
             }
         });
@@ -253,7 +271,6 @@ public class MainActivity extends PermissionActivity {
 
     private void cancelPreviousZombies() {
         if (currentZombiesContainer == null) return;
-            Log.d("OLOLOLO", "COunt = " + currentZombiesContainer.zombieViews.size());
             currentZombiesContainer.cancel();
     }
 }
